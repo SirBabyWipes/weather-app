@@ -63,8 +63,21 @@ struct ContentView: View {
                 
         }
         .padding()
+        .task {
+                   await fetchWeather()
+               }
     }
-}
+    func fetchWeather() async {
+            let api = WeatherAPI()
+
+            do {
+                let _ = try await api.getWeather(city: "Charlotte")
+            } catch {
+                print("Error", error)
+            }
+        }
+    }
+
 
 #Preview {
     ContentView()
