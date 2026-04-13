@@ -64,14 +64,15 @@ struct ContentView: View {
         }
         .padding()
         .task {
-                   await fetchWeather()
+                   await fetchInitWeather()
                }
     }
-    func fetchWeather() async {
-            let api = WeatherAPI()
-
+    
+    let api = WeatherAPI()
+    
+    func fetchInitWeather() async {
             do {
-                let _ = try await api.getWeather(city: "Charlotte")
+                let _ = try await api.getWeather(city: "Charlotte", useCache: true)
             } catch {
                 print("Error", error)
             }

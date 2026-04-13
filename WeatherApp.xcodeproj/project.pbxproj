@@ -13,6 +13,7 @@
 		737101F72F55D3E600D75F78 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 737101F62F55D3E600D75F78 /* Preview Assets.xcassets */; };
 		D826054D2F82ABEA006AEFCC /* WeatherData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D826054C2F82ABD9006AEFCC /* WeatherData.swift */; };
 		D826054F2F82BDBF006AEFCC /* UnitConversion.swift in Sources */ = {isa = PBXBuildFile; fileRef = D826054E2F82BDB9006AEFCC /* UnitConversion.swift */; };
+		D887136E2F8DA4CE00E71392 /* UserCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = D887136D2F8DA4CE00E71392 /* UserCache.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +24,7 @@
 		737101F62F55D3E600D75F78 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		D826054C2F82ABD9006AEFCC /* WeatherData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherData.swift; sourceTree = "<group>"; };
 		D826054E2F82BDB9006AEFCC /* UnitConversion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnitConversion.swift; sourceTree = "<group>"; };
+		D887136D2F8DA4CE00E71392 /* UserCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCache.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,6 +61,7 @@
 				D826054C2F82ABD9006AEFCC /* WeatherData.swift */,
 				737101EF2F55D3E500D75F78 /* WeatherAppApp.swift */,
 				737101F12F55D3E500D75F78 /* ContentView.swift */,
+				D887136D2F8DA4CE00E71392 /* UserCache.swift */,
 				737101F32F55D3E600D75F78 /* Assets.xcassets */,
 				737101F52F55D3E600D75F78 /* Preview Content */,
 			);
@@ -147,6 +150,7 @@
 				D826054F2F82BDBF006AEFCC /* UnitConversion.swift in Sources */,
 				D826054D2F82ABEA006AEFCC /* WeatherData.swift in Sources */,
 				737101F02F55D3E500D75F78 /* WeatherAppApp.swift in Sources */,
+				D887136E2F8DA4CE00E71392 /* UserCache.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

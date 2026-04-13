@@ -109,11 +109,28 @@ struct WeatherAPI {
     }
     
     // Makes the API call for the weather
-    func getWeather(city: String) async throws -> WeatherData {
+    func getWeather(city: String, useCache: Bool = true) async throws -> WeatherData {
+        var latitude: Float?
+        var longitude: Float?
+        var city: String = city
+        
         // Make call to getLatitudeAndLongitude and destructure results into latitude and longitude
-        let (latitude, longitude) = try await getLatitudeAndLongitude(city: city)
+        if useCache {
+            let (latitude, longitude) = UserCache.shared.getLocation()!
+            let city = UserCache.shared.getCity()!
+        }
+        else {
+            let (latitude, longitude) = try await getLatitudeAndLongitude(city: city)
+        }
+        
+        // Store these results in the cache for easy loading on app start
+        if !useCache { // Since not using cache, we want to store these results for the future
+            UserCache.shared.setLocation(latitude!, longitude!)
+            UserCache.shared.setCity(city)
+        }
+        
         // Using these results build the API URL
-        let apiURL = buildURL(latitude: latitude, longitude: longitude)
+        let apiURL = buildURL(latitude: latitude!, longitude: longitude!)
         // Make API call
         let (data, response) = try await URLSession.shared.data(from: apiURL)
         //Check for response code
@@ -163,15 +180,4 @@ struct WeatherAPI {
                 throw WeatherFail(message: "Decoding error: \(error.localizedDescription)", code: 3)
             }
     }
-    
-    // Gets user cache if it exists
-    func getWeatherCache() {
-        
-    }
-    
-    // Sets user cache for future reference
-    func setWeatherCache() {
-        
-    }
-    
 }
