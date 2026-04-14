@@ -71,7 +71,12 @@ struct ContentView: View {
             let api = WeatherAPI()
 
             do {
-                let _ = try await api.getWeather(city: "Charlotte")
+                let (lat, lon) = try await api.getLatitudeAndLongitude(city: "New York")
+
+                        print("Latitude:", lat)
+                        print("Longitude:", lon)
+                let _ = try await api.getWeather(city: "New York")
+
             } catch {
                 print("Error", error)
             }
