@@ -95,6 +95,18 @@ struct WeatherData: Codable {
     }
 }
 
+//Response struct from Geocoding API
+struct GeoResponse: Codable {
+    let results: [GeoResult]?
+}
+
+struct GeoResult: Codable {
+    let name: String
+    let latitude: Float
+    let longitude: Float
+    let country: String?
+}
+
 // Contains the API call functionality and builds the WeatherData with response
 struct WeatherAPI {
     // Builds the API url which will get the weather. Latitude and longitude needs to be defined
@@ -103,9 +115,30 @@ struct WeatherAPI {
     }
     
     // Takes a user input for the city name and fetches the latitude and longitude of that location
-    func getLatitudeAndLongitude(city: String = "Charlotte") async throws -> (Float, Float) {
-        // Returns Charlotte's latitude and longitude by default
-        return (35.22709, -80.84313)
+    func getLatitudeAndLongitude(city: String) async throws -> (Float, Float) {
+        
+        //Url for geocoding API
+        let url = URL(string:
+            "https://geocoding-api.open-meteo.com/v1/search?name=\(city)&count=1&language=en&format=json"
+        )!
+        
+        //Call to API
+        let (data, response) = try await URLSession.shared.data(from: url)
+        
+        //Checks if response is valid
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            throw WeatherFail(message: "Geocoding API failed", code: 2)
+        }
+            
+        
+        let decoded = try JSONDecoder().decode(GeoResponse.self, from: data)
+            
+            guard let firstResult = decoded.results?.first else {
+                throw WeatherFail(message: "City not found", code: 1)
+            }
+            
+            return (firstResult.latitude, firstResult.longitude)
     }
     
     // Makes the API call for the weather
