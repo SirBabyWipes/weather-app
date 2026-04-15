@@ -67,12 +67,19 @@ struct ContentView: View {
                    await fetchInitWeather()
                }
     }
-    
+    // Creates the API for all weatherdata related logic
     let api = WeatherAPI()
     
+    // Fetches the initial weather data on startup, uses userCache
     func fetchInitWeather() async {
             do {
-                let _ = try await api.getWeather(city: "Charlotte", useCache: true)
+                let _ = try await api.getWeather(useCache: true)
+                print(UserDefaults.standard.dictionaryRepresentation()) // For debug purposes, to see the UserDefaults cache
+                // **** THIS WIPES THE APP'S CACHE - USE FOR DEBUG AND UNCOMMENT AS NEEDED
+                if let bundleID = Bundle.main.bundleIdentifier {
+                    UserDefaults.standard.removePersistentDomain(forName: bundleID)
+                    UserDefaults.standard.synchronize()
+                }
             } catch {
                 print("Error", error)
             }

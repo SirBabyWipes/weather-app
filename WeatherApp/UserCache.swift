@@ -12,29 +12,38 @@ final class UserCache {
     private let storage = UserDefaults.standard
     
     func setLocation(_ latitude: Float, _ longitude: Float) {
-        let location: (Float, Float) = (latitude, longitude)
-        storage.set(location, forKey: "location")
+        storage.set(latitude, forKey: "latitude")
+        storage.set(longitude, forKey: "longitude")
     }
     
-    func getLocation() -> (Float, Float)? {
-        return storage.value(forKey: "location") as? (Float, Float)
+    func getLocation() -> (Float, Float) {
+        if storage.value(forKey: "latitude") == nil || storage.value(forKey: "longitude") == nil {
+            return (-999, -999)
+        }
+        let latitude: Float = storage.value(forKey: "latitude") as! Float
+        let longitude: Float = storage.value(forKey: "longitude") as! Float
+        return (latitude, longitude) as (Float, Float)
     }
     
     func setCity(_ city: String) {
         storage.set(city, forKey: "city")
     }
     
-    func getCity() -> String? {
-        return storage.value(forKey: "city") as? String
+    func getCity() -> String {
+        if storage.value(forKey: "city") == nil {
+            return "Unknown City"
+        }
+        let city: String = storage.value(forKey: "city") as! String
+        return city
     }
     
-    func setUnitPref(_ unit: Character) {
-        if ["c", "f"].contains(unit) {
+    func setUnitPref(_ unit: String) {
+        if ["C", "F"].contains(unit) {
             storage.set(unit, forKey: "unit")
         }
     }
     
-    func getUnitPref() -> Character? {
-        return storage.value(forKey: "unit") as? Character
+    func getUnitPref() -> String {
+        return storage.value(forKey: "unit") as! String
     }
 }
