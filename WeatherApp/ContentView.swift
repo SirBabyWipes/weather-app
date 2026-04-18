@@ -9,41 +9,116 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var weatherData: WeatherData?
-    
+    @State private var city: String = UserCache.shared.getCity()
+    @State private var showSearch = false
+    @State private var ConvertUnits: Bool = UserCache.shared.getUnitPref() == "C"
     var body: some View {
         VStack(spacing: 20) {
             ScrollView(.vertical, showsIndicators: false) {
                 if let weatherData {
-                    // Location Button
+                    Spacer()
                     HStack{
+                        // Search location
                         Image(systemName: "location.north.circle")
-                        // Button Action
-                        Button("Location") {
-                            
-                        }.foregroundStyle(.black)
+                        Button(city) {
+                            showSearch = true
+                        }
+                        .foregroundStyle(.black)
+                        .sheet(isPresented: $showSearch) {
+                            VStack(spacing: 20) {
+                                Text("Search City")
+                                    .font(.title)
+                                
+                                TextField("Enter city", text: $city)
+                                    .textFieldStyle(.roundedBorder)
+                                    .padding()
+                                
+                                Button("Search") {
+                                    Task {
+                                        await fetchWeather()
+                                    }
+                                    showSearch = false
+                                }
+                            }
+                            .padding()
+                        }
+                        
                         Spacer()
+                        VStack{
+                            // Convert Switch
+                            Toggle("", isOn: $ConvertUnits)
+                                .onChange(of: ConvertUnits) { _, newValue in
+                                    UserCache.shared.setUnitPref(newValue ? "C" : "F")
+                                }
+                            if !ConvertUnits {
+                                Text("Imperial")
+                                    .padding(-5)
+                            } else {
+                                Text("Metric")
+                                    .padding(-5)
+                            }
+                        }
+                        .frame(width: 60)
+                        
+                        
+                        
                     }.padding()
                     
-                    // Weather Image
-                    Image(systemName: "sun.max.fill")
-                        .resizable()
-                        .frame(width: 150, height: 150)
-                        .foregroundStyle(.yellow)
                     
+                    // General Weather Icon
+                    if weatherData.current.precipitation > 50 {
+                        Image(systemName: "cloud.bolt.rain.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .blue)
+                            .font(.system(size: 150))
+                    } else if weatherData.current.precipitation > 20 {
+                        Image(systemName: "cloud.rain.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .blue)
+                            .font(.system(size: 150))
+                    } else if weatherData.current.cloudCover > 66 {
+                        Image(systemName: "cloud.fill")
+                            .foregroundStyle(.gray)
+                            .font(.system(size: 150))
+                    } else if weatherData.current.cloudCover > 33 {
+                        Image(systemName: "cloud.sun.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .yellow)
+                            .font(.system(size: 150))
+                    } else {
+                        Image(systemName: "sun.max.fill")
+                            .foregroundStyle(.yellow)
+                            .font(.system(size: 150))
+                    }
                     
                     VStack(spacing: 20){
                         // Temperature
-                        Text("\(weatherData.current.currentTemperature.formatted(.number.precision(.fractionLength(0))))°")
-                            .font(.system(size: 45, weight: .bold))
-                            .padding(.leading)
-                        // General weather
-                        Text("\(weatherData.current.cloudCover.description) cloud cover")
-                            .font(.system(size: 20, weight: .bold))
-                            .padding(-10)
+                        
+                        let currentTemp = weatherData.current.currentTemperature
+                        if !ConvertUnits {
+                            Text("\(currentTemp.formatted(.number.precision(.fractionLength(0))))°")
+                                .font(.system(size: 45, weight: .bold))
+                                .padding(.leading)
+                        } else {
+                            Text("\(UnitConversion.fahrenheitToCelsius(currentTemp).formatted(.number.precision(.fractionLength(0))))°")
+                                .font(.system(size: 45, weight: .bold))
+                                .padding(.leading)
+                        }
+                        
+                        
+                        
                         // High and Low
-                        Text("H: L:")
-                            .font(.system(size: 20, weight: .bold))
-                            .padding(-10)
+                        let dailyHigh = weatherData.daily.temperatureMaxDaily[0]
+                        let dailylow = weatherData.daily.temperatureMinDaily[0]
+                        if !ConvertUnits {
+                            Text("H: \(dailyHigh.formatted(.number.precision(.fractionLength(0))))°  L: \(dailylow.formatted(.number.precision(.fractionLength(0))))°")
+                                .font(.system(size: 20, weight: .bold))
+                                .padding(-10)
+                        } else {
+                            Text("H: \(UnitConversion.fahrenheitToCelsius(dailyHigh).formatted(.number.precision(.fractionLength(0))))°  L: \(UnitConversion.fahrenheitToCelsius(dailylow).formatted(.number.precision(.fractionLength(0))))°")
+                                .font(.system(size: 20, weight: .bold))
+                                .padding(-10)
+                        }
                     }.padding()
                     
                     
@@ -59,8 +134,17 @@ struct ContentView: View {
                             .padding(.trailing, 30)
                         
                         Image(systemName: "wind")
-                        Text("\(weatherData.current.windSpeed.formatted(.number.precision(.fractionLength(0)))) km/h")
-                            .padding(.trailing, 30)
+                        let windSpeed = weatherData.current.windSpeed
+                        if !ConvertUnits {
+                            Text("\(windSpeed.formatted(.number.precision(.fractionLength(0)))) mph")
+                                .padding(.trailing, 30)
+                        } else {
+                            Text("\(UnitConversion.mphToKph(windSpeed).formatted(.number.precision(.fractionLength(0)))) km/h")
+                                .padding(.trailing, 30)
+                        }
+                        
+                        
+                        
                     }
                     .frame(width: 330)
                     .padding()
@@ -74,22 +158,46 @@ struct ContentView: View {
                             Text("Today")
                                 .foregroundColor(.white)
                                 .padding(.trailing, 115)
-                            Text("\(weatherData.hourly.timeHourly)")
+                            Text("\(weatherData.hourly.timeHourly[0], format: .dateTime.weekday(.wide).month(.abbreviated).day())")
                                 .foregroundColor(.white)
-                                .padding(.leading, 120)
+                                .padding(.leading, 30)
                         }.padding(.bottom)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 20) {
-                                ForEach(0..<12) { x in
+                                let startIndex = Calendar.current.component(.hour, from: Date())
+                                let endIndex = min(startIndex + 25, weatherData.hourly.timeHourly.count)
+                                ForEach(Array(startIndex..<endIndex), id: \.self) { x in
                                     VStack(spacing: 8) {
-                                        Text("AM")
-                                            .font(.system(size: 20))
-                                        Image(systemName: "sun.max.fill")
-                                            .resizable()
-                                            .frame(width: 45, height: 45)
-                                            .foregroundStyle(.yellow)
-                                        Text("30°")
-                                            .font(.system(size: 20))
+                                        Text("\(weatherData.hourly.timeHourly[x], format: .dateTime.hour())")
+                                            .font(.system(size: 14))
+                                        
+                                        if weatherData.hourly.precipitationHourly[x] > 50 {
+                                            Image(systemName: "cloud.bolt.rain.fill")
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .blue)
+                                        } else if weatherData.hourly.precipitationHourly[x] > 20 {
+                                            Image(systemName: "cloud.rain.fill")
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .blue)
+                                        } else if weatherData.hourly.cloudCoverHourly[x] > 66 {
+                                            Image(systemName: "cloud.fill")
+                                                .foregroundStyle(.gray)
+                                        } else if weatherData.hourly.cloudCoverHourly[x] > 33 {
+                                            Image(systemName: "cloud.sun.fill")
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(.white, .yellow)
+                                        } else {
+                                            Image(systemName: "sun.max.fill")
+                                                .foregroundStyle(.yellow)
+                                        }
+                                        if !ConvertUnits {
+                                            Text("\(weatherData.hourly.temperatureHourly[x].formatted(.number.precision(.fractionLength(0))))°")
+                                                .font(.system(size: 18))
+                                        } else {
+                                            Text("\(UnitConversion.fahrenheitToCelsius(weatherData.hourly.temperatureHourly[x]).formatted(.number.precision(.fractionLength(0))))°")
+                                                .font(.system(size: 18))
+                                        }
+                                        
                                     }
                                     .foregroundColor(.white)
                                 }
@@ -102,20 +210,73 @@ struct ContentView: View {
                     .background(.black)
                     .cornerRadius(20)
                     
-                    
+                    // Third Card
                     VStack(spacing: 12) {
                         HStack(){
-                            Text("Next Forecast")
+                            Text("Daily Forecast")
                                 .font(.title3)
                             Spacer()
                         }
                         
                         ForEach(0..<7) { x in
                             HStack {
-                                Text("Monday")
-                                Image(systemName: "sun.max.fill")
-                                    .foregroundStyle(.yellow)
-                                Text("H: 78°  L: 62°")
+                                let dailyHigh = weatherData.daily.temperatureMaxDaily[x]
+                                let dailylow = weatherData.daily.temperatureMinDaily[x]
+                                
+                                if x == 0{
+                                    Text("Today")
+                                    if weatherData.daily.precipitationProbabilityMaxDaily[x] > 50 {
+                                        Image(systemName: "cloud.bolt.rain.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .blue)
+                                    } else if weatherData.daily.precipitationProbabilityMaxDaily[x] > 20 {
+                                        Image(systemName: "cloud.rain.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .blue)
+                                    } else if weatherData.daily.cloudCoverMeanDaily[x] > 66 {
+                                        Image(systemName: "cloud.fill")
+                                            .foregroundStyle(.gray)
+                                    } else if weatherData.daily.cloudCoverMeanDaily[x] > 33 {
+                                        Image(systemName: "cloud.sun.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .yellow)
+                                    } else {
+                                        Image(systemName: "sun.max.fill")
+                                            .foregroundStyle(.yellow)
+                                    }
+                                    if !ConvertUnits {
+                                        Text("H: \(dailyHigh.formatted(.number.precision(.fractionLength(0))))°  L: \(dailylow.formatted(.number.precision(.fractionLength(0))))°")
+                                    } else {
+                                        Text("H: \(UnitConversion.fahrenheitToCelsius(dailyHigh).formatted(.number.precision(.fractionLength(0))))°  L: \(UnitConversion.fahrenheitToCelsius(dailylow).formatted(.number.precision(.fractionLength(0))))°")
+                                    }
+                                    
+                                } else{
+                                    Text("\(weatherData.daily.timeDaily[x], format: .dateTime.weekday())")
+                                    if weatherData.daily.precipitationProbabilityMaxDaily[x] > 50 {
+                                        Image(systemName: "cloud.bolt.rain.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .blue)
+                                    } else if weatherData.daily.precipitationProbabilityMaxDaily[x] > 20 {
+                                        Image(systemName: "cloud.rain.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .blue)
+                                    } else if weatherData.daily.cloudCoverMeanDaily[x] > 66 {
+                                        Image(systemName: "cloud.fill")
+                                            .foregroundStyle(.gray)
+                                    } else if weatherData.daily.cloudCoverMeanDaily[x] > 33 {
+                                        Image(systemName: "cloud.sun.fill")
+                                            .symbolRenderingMode(.palette)
+                                            .foregroundStyle(.white, .yellow)
+                                    } else {
+                                        Image(systemName: "sun.max.fill")
+                                            .foregroundStyle(.yellow)
+                                    }
+                                    if !ConvertUnits {
+                                        Text("H: \(dailyHigh.formatted(.number.precision(.fractionLength(0))))°  L: \(dailylow.formatted(.number.precision(.fractionLength(0))))°")
+                                    } else {
+                                        Text("H: \(UnitConversion.fahrenheitToCelsius(dailyHigh).formatted(.number.precision(.fractionLength(0))))°  L: \(UnitConversion.fahrenheitToCelsius(dailylow).formatted(.number.precision(.fractionLength(0))))°")
+                                    }
+                                }
                             }
                         }
                     }
@@ -139,15 +300,12 @@ struct ContentView: View {
             .padding()
             .background(.cyan)
             .ignoresSafeArea()
-            .task {
-                await fetchWeather()
-            }
         }
         .padding()
         .background(.cyan)
         .ignoresSafeArea()
         .task {
-            await fetchInitWeather()
+            await loadCachedWeather()
         }
     }
     // Creates the API for all weatherdata related logic
@@ -159,26 +317,38 @@ struct ContentView: View {
             let _ = try await api.getWeather(useCache: true)
             print(UserDefaults.standard.dictionaryRepresentation()) // For debug purposes, to see the UserDefaults cache
             // **** THIS WIPES THE APP'S CACHE - USE FOR DEBUG AND UNCOMMENT AS NEEDED
-            if let bundleID = Bundle.main.bundleIdentifier {
-                UserDefaults.standard.removePersistentDomain(forName: bundleID)
-                UserDefaults.standard.synchronize()
-            }
+            //if let bundleID = Bundle.main.bundleIdentifier {
+            //   UserDefaults.standard.removePersistentDomain(forName: bundleID)
+            //   UserDefaults.standard.synchronize()
+            //}
         } catch {
             print("Error", error)
         }
     }
     func fetchWeather() async {
-        let api = WeatherAPI()
         
         do {
-            let (lat, lon) = try await api.getLatitudeAndLongitude(city: "New York")
+            let data = try await api.getWeather(city: city, useCache: false)
             
-            print("Latitude:", lat)
-            print("Longitude:", lon)
-            self.weatherData = try await api.getWeather(city: "New York")
-            
+            await MainActor.run {
+                self.weatherData = data
+            }
         } catch {
-            print("Error", error)
+            print("Error:", error)
+        }
+    }
+    func loadCachedWeather() async {
+        
+        do {
+            let data = try await api.getWeather(useCache: true)
+            
+            await MainActor.run {
+                self.weatherData = data
+                self.city = UserCache.shared.getCity()
+                ConvertUnits = UserCache.shared.getUnitPref() == "C"
+            }
+        } catch {
+            print("Error:", error)
         }
     }
 }
