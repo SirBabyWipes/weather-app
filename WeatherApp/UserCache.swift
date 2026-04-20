@@ -44,6 +44,6 @@ final class UserCache {
     }
     
     func getUnitPref() -> String {
-        return storage.value(forKey: "unit") as! String
+        return storage.value(forKey: "unit") as? String ?? "F"
     }
 }

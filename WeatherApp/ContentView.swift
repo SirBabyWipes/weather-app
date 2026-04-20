@@ -172,7 +172,10 @@ struct ContentView: View {
                                         Text("\(weatherData.hourly.timeHourly[x], format: .dateTime.hour())")
                                             .font(.system(size: 14))
                                         
-                                        if weatherData.hourly.precipitationHourly[x] > 50 {
+                                        if   x < 10+startIndex {
+                                            Image(systemName: "moon.fill")
+                                        }
+                                        else if weatherData.hourly.precipitationHourly[x] > 50 {
                                             Image(systemName: "cloud.bolt.rain.fill")
                                                 .symbolRenderingMode(.palette)
                                                 .foregroundStyle(.white, .blue)
