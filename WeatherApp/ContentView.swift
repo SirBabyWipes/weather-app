@@ -17,10 +17,11 @@ struct ContentView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 if let weatherData {
                     Spacer()
+                    // Location Button
                     HStack{
                         // Search location
                         Image(systemName: "location.north.circle")
-                        Button(city) {
+                        Button(UserCache.shared.getCity()) {
                             showSearch = true
                         }
                         .foregroundStyle(.black)
