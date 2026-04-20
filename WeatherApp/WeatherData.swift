@@ -122,12 +122,8 @@ struct WeatherAPI {
     
     // Builds the API url which will get the weather. Latitude and longitude needs to be defined
     func buildURL(latitude: Float, longitude: Float) -> URL {
-        let useImperial = UserCache.shared.getUnitPref() == "F"
         var urlStr = "https://api.open-meteo.com/v1/forecast?latitude=\(latitude)&longitude=\(longitude)&current=temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,cloud_cover_mean&hourly=temperature_2m,cloud_cover,precipitation,precipitation_probability,temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,rain,showers,snowfall&timezone=auto"
-        if (useImperial) {
-            urlStr += "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch"
-            print("!!! Using imperial units for API Call !!!")
-        }
+        urlStr += "&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch"
         print("Returning built API URL")
         return URL(string:urlStr)!
     }
